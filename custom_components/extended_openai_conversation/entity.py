@@ -15,8 +15,7 @@ from openai.types.chat import (
     ChatCompletionToolParam,
 )
 import orjson
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio as vol
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -50,6 +49,7 @@ from .const import (
 from .exceptions import FunctionNotFound, ParseArgumentsFailed, TokenLengthExceededError
 from .functions import get_function
 from .helpers import get_model_config
+from .schema import adjust_schema
 
 if TYPE_CHECKING:
     from . import ExtendedOpenAIConfigEntry
@@ -67,43 +67,19 @@ def _shorten_tool_call_id(tool_call_id: str) -> str:
     return hashlib.sha256(tool_call_id.encode()).hexdigest()[:9]
 
 
-def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the schema to be compatible with OpenAI API."""
-    if schema["type"] == "object":
-        schema.setdefault("strict", True)
-        schema.setdefault("additionalProperties", False)
-        if "properties" not in schema:
-            return
-
-        if "required" not in schema:
-            schema["required"] = []
-
-        # Ensure all properties are required
-        for prop, prop_info in schema["properties"].items():
-            _adjust_schema(prop_info)
-            if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
-                schema["required"].append(prop)
-
-    elif schema["type"] == "array":
-        if "items" not in schema:
-            return
-
-        _adjust_schema(schema["items"])
-
-
 def _format_structured_output(
     schema: vol.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = convert(
+    result: dict[str, Any] = vol.to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
+        openapi_version="3.1.0",
     )
 
-    _adjust_schema(result)
+    adjust_schema(result)
 
     return result
 

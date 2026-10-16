@@ -16,7 +16,7 @@ pytest-timeout>=2.2.0
 pytest-homeassistant-custom-component>=0.12.0
 
 # Schema validation
-voluptuous>=0.13.0
+probatio>=0.13.0
 
 # YAML parsing
 PyYAML>=6.0
