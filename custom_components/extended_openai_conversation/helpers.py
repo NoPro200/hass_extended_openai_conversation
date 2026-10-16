@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import re
-from typing import Any
+from typing import Any, cast
 
 from openai import AsyncAzureOpenAI, AsyncClient, AsyncOpenAI
 
@@ -91,8 +91,8 @@ def get_token_param_for_model(model: str) -> str:
 
 def convert_to_template(
     settings: Any,
+    hass: HomeAssistant,
     template_keys: list[str] | None = None,
-    hass: HomeAssistant | None = None,
 ) -> None:
     if template_keys is None:
         template_keys = ["data", "event_data", "target", "service"]
@@ -102,7 +102,7 @@ def convert_to_template(
 def _convert_to_template(
     settings: Any,
     template_keys: list[str],
-    hass: HomeAssistant | None,
+    hass: HomeAssistant,
     parents: list[str],
 ) -> None:
     if isinstance(settings, dict):
@@ -143,14 +143,14 @@ async def get_authenticated_client(
             azure_endpoint=base_url,
             api_version=api_version,
             organization=organization,
-            http_client=get_async_client(hass),
+            http_client=cast(Any, get_async_client(hass)),
         )
     else:
         client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
             organization=organization,
-            http_client=get_async_client(hass),
+            http_client=cast(Any, get_async_client(hass)),
         )
 
     if skip_authentication:

@@ -126,7 +126,7 @@ def _convert_content_to_param(
                     "tool_call_id": _shorten_tool_call_id(content.tool_call_id)
                     if shorten_tool_call_id
                     else content.tool_call_id,
-                    "content": orjson.dumps(content.tool_result).decode(),
+                    "content": orjson.dumps(content.result.data).decode(),
                 }
             )
 
@@ -445,7 +445,7 @@ class ExtendedOpenAIBaseLLMEntity(Entity):
             agent_id=self.entity_id,
             tool_call_id=tool_input.id,
             tool_name=tool_input.tool_name,
-            tool_result={"result": str(result)},
+            result=llm.ToolResult(data={"result": str(result)}),
         )
 
     def should_run_in_background(self, arguments: dict[str, Any]) -> bool:
